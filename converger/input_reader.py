@@ -7,9 +7,10 @@ Read QE input file and return all the lines as a list
 """
 import sys
 
-class InputReader:
+class InputReader(object):
     # TO DO: Take program type as input to change how the object reads from
-    #        the file
+    #        the file. The dictionary is used to translate the same user 
+    #        keyword for any program.
     def __init__(self, filename):
         
         # input file
@@ -35,6 +36,8 @@ class InputReader:
             self._lines = fileptr.readlines()
             
     def find_line_number(self,findString):
+        
+        stringLineNum = None
         # find the line number in which the string occurs
         qeString = self._qeDict[findString]
         for line in self._lines:
@@ -44,4 +47,4 @@ class InputReader:
         return stringLineNum
             
     def get_lines_file(self):
-        return self._lines
+        return self._lines.copy()
