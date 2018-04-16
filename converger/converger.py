@@ -6,11 +6,12 @@ Class to set up QE calculations for checking convergence
 @author: abishekk
 """
 import numpy as np
+import sys
 from input_reader import InputReader
 
 class Converger(object):
     
-    def __init__(self, filename, convCriterion, tol):
+    def __init__(self, filename, convCriterion='total energy', tol=1e-8):
         # which variable to change for check for convergence
         # eg. ecutwfc, ecutrho, k-points
         self._convergeParam = ''
@@ -19,27 +20,31 @@ class Converger(object):
         # step size for variable parameter
         self._stepSize = []
         # QE input file
-        self._inputFile = ''
+        self._inputFile = filename
         # which property to use for checking convergence
         # eg. total energy, fermi energy etc
-        self._convergeUsing = ''
+        self._convergeUsing = str(convCriterion)
         # tolerance 
-        self._tolerance = 1e-8
+        self._tolerance = float(tol)
         # array to hold results: parameter, criterion 
         self._results= []
         # bool for keeping track of convergence
         self._notConverged = True
                 
         # open input file to check if it exists
-        self._inputFile = filename
+        try:
+            fileptr = open(self._inputFile,'r')
+        except OSError:
+            print('Cannot open: ', self._inputFile)
+            sys.exit(1)
+        else:
+            fileptr.close()
 
         # check if criterion used for convergence is allowed           
-        self._convergeUsing = str(convCriterion)
         if (self._convergeUsing != 'total energy'):
             raise Exception('Currently, only \'total energy\' is allowed')
         
         # check if tolerance for determining is valid           
-        self._tolerance= float(tol)
         if (self._tolerance <= 0):
             raise Exception('Value for tolerance must be greater than 0')
     
