@@ -7,11 +7,13 @@ Class to set up QE calculations for checking convergence
 """
 import numpy as np
 import sys
+import os
 from input_reader import InputReader
+from input_writer import InputWriter
 
 class Converger(object):
     
-    def __init__(self, filename, convCriterion='total energy', tol=1e-8):
+    def __init__(self, filename, convCriterion='total energy', tol=1e-6):
         # which variable to change for check for convergence
         # eg. ecutwfc, ecutrho, k-points
         self._convergeParam = ''
@@ -26,7 +28,7 @@ class Converger(object):
         self._convergeUsing = str(convCriterion)
         # tolerance 
         self._tolerance = float(tol)
-        # array to hold results: parameter, criterion 
+        # array to hold results: parameter, criterion value 
         self._results= []
         # bool for keeping track of convergence
         self._notConverged = True
@@ -76,43 +78,60 @@ class Converger(object):
         # read inputfile
         qeInput = InputReader(self._inputFile)
         qeInput.read_file()
-        LineNum = qeInput.find_line_number(self._convergeUsing)
-        LinesList = qeInput.get_lines_file()
+        lineNum = qeInput.find_line_number(self._convergeUsing)
+        linesList = qeInput.get_lines_file()
                 
         # modify k-point input card
         if (self._convergeUsing == 'kpoints'):
-            modLinesList = self.modify_kpoint_card(LinesList, LineNum)
+            modLinesList = self.modify_kpoint_card(linesList, lineNum)
         
         while self._notConverged:
-            # create new inputfile
-            self._notConverged = False
-            # start job
+            # create input file for job
+            jobStr = self._convergeUsing + '_' + \
+                      np.array2string(self._startValue,separator='_')[1:-1]
+            workDir = os.getcwd()
+            jobPath = workDir + '/' + jobStr
+            
+            if not os.path.exists(jobPath):
+                os.makedirs(jobPath)            
+            os.chdir(jobPath)
+            
+            modLinesList[lineNum+1] = \
+                    np.array2string(self._startValue,separator=' ')[1:-1] + \
+                    ' 0 0 0\n'
+            inpFile = 'in.pw.' + jobStr
+            qeNewInput = InputWriter(inpFile, modLinesList)
+            qeNewInput.write_lines_to_file()
+            
+            # launch job
         
-            # parse output file after job finishes
+            # parse output file after job finishes and update results
         
             # check convergence
+            os.chdir(workDir)
+            self._notConverged = False # to be deleted
         
         # output, print result
-        print('Done!')
+        print('K-point convergence completed!')
     
     def modify_kpoint_card(self,lines,lineNum):
         # k-point convergence requires the k-points to be 
         # generated automatically. Any other method of specifying k-points
         # needs to be changed to automatic mode
-        modLines = lines
+        modLines = lines.copy()
         kptOption = modLines[lineNum].split()[1]
         if kptOption == 'gamma':
-            modLines[lineNum] = 'K_POINTS automatic'
+            modLines[lineNum] = 'K_POINTS automatic\n'
             if lineNum == len(lines)-1 :
-                modLines.append('0 0 0 0 0 0')
+                modLines.append('0 0 0 0 0 0\n')
             else:
-                modLines.insert(lineNum+1,'0 0 0 0 0 0')
+                modLines.insert(lineNum+1,'0 0 0 0 0 0\n')
         elif kptOption == 'automatic':
-            modLines[lineNum+1] = '0 0 0 0 0 0'
+            modLines[lineNum+1] = '0 0 0 0 0 0\n'
         else:
-            modLines[lineNum] = 'K_POINTS automatic'
+            modLines[lineNum] = 'K_POINTS automatic\n'
             kptNum = int(lines[lineNum+1])
-            modLines[lineNum+1] = '0 0 0 0 0 0'
+            modLines[lineNum+1] = '0 0 0 0 0 0\n'
             del modLines[lineNum+2:lineNum+2+kptNum]
         
         return modLines
