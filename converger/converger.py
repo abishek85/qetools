@@ -8,8 +8,12 @@ Class to set up QE calculations for checking convergence
 import numpy as np
 import sys
 import os
+import matplotlib.pyplot as plt
+
 from input_reader import InputReader
 from input_writer import InputWriter
+from job_launcher import JobLauncher
+from output_parser import OutputParser
 
 class Converger(object):
     
@@ -26,7 +30,7 @@ class Converger(object):
         # which property to use for checking convergence
         # eg. total energy, fermi energy etc
         self._convergeUsing = str(convCriterion)
-        # tolerance 
+        # absolute tolerance 
         self._tolerance = float(tol)
         # array to hold results: parameter, criterion value 
         self._results= []
@@ -91,6 +95,8 @@ class Converger(object):
                       np.array2string(self._startValue,separator='_')[1:-1]
             workDir = os.getcwd()
             jobPath = workDir + '/' + jobStr
+            inpFile = 'in.' + jobStr
+            outFile = 'out.' + jobStr
             
             if not os.path.exists(jobPath):
                 os.makedirs(jobPath)            
@@ -99,20 +105,41 @@ class Converger(object):
             modLinesList[lineNum+1] = \
                     np.array2string(self._startValue,separator=' ')[1:-1] + \
                     ' 0 0 0\n'
-            inpFile = 'in.pw.' + jobStr
-            qeNewInput = InputWriter(inpFile, modLinesList)
-            qeNewInput.write_lines_to_file()
             
-            # launch job
-        
+            NewInput = InputWriter(inpFile, modLinesList)
+            NewInput.write_lines_to_file()
+            
+            # launch task
+            task = JobLauncher('mpirun -np 16 pw.x', inpFile, outFile)
+            task.job_run()
+            
             # parse output file after job finishes and update results
-        
+            readOut = OutputParser()
+            readOut.parse_qe_op_file(outFile)
+            
+            # TO DO: make it generic
+            self._results.append([readOut.get_kpoints(), \
+                                  readOut.get_totenergy()])
+            
             # check convergence
-            os.chdir(workDir)
-            self._notConverged = False # to be deleted
-        
+            if(len(self._results) >= 2):
+                deltaTotEnergy = abs(self._results[-1][1] - \
+                                     self._results[-2][1])
+            
+            if (deltaTotEnergy <= self._tolerance):
+                # total energy has converged
+                self._notConverged = False
+            else:
+                # update K-points and repeat calculation
+                os.chdir(workDir)
+                self._startValue += self._stepSize
+                    
         # output, print result
-        print('K-point convergence completed!')
+        print('Convergence test completed!')
+        if (self._convergeUsing == 'kpoints'):
+            print('K-point grid needed for convergence: ' + self._startValue)
+        self.plot_results()
+            
     
     def modify_kpoint_card(self,lines,lineNum):
         # k-point convergence requires the k-points to be 
@@ -135,3 +162,15 @@ class Converger(object):
             del modLines[lineNum+2:lineNum+2+kptNum]
         
         return modLines
+    
+    def plot_results(self):
+        """
+        Plot results of convergence tests
+        """
+        results = np.asarray(self._results)
+        plt.plot(results[:,0],results[:,1],'ro-',linewidth=2,markersize=10)
+        plt.xlabel(self._convergeUsing)
+        plt.ylabel(self._convergeParam)
+        plt.title('Convergence tests')
+        plt.show()
+        

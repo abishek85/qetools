@@ -12,7 +12,7 @@
     ecutwfc =18.0,
  /
  &electrons
-    diagonalization='$diago'
+    diagonalization='david'
     mixing_mode = 'plain'
     mixing_beta = 0.7
     conv_thr =  1.0d-8
