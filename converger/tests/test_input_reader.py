@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr 16 10:58:22 2018
+Unit tests for functions in input_reader.py
 
 @author: abishekk
 """
-
-# Unit tests for input reader class
 import sys
 import unittest
 
