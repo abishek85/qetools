@@ -17,7 +17,8 @@ from output_parser import OutputParser
 
 class Converger(object):
     
-    def __init__(self, filename, convCriterion='total energy', tol=1e-6):
+    def __init__(self, filename, convCriterion='total energy', \
+                 tol=1e-6, dftCode='qe'):
         # which variable to change for check for convergence
         # eg. ecutwfc, ecutrho, k-points
         self._convergeParam = ''
@@ -36,7 +37,8 @@ class Converger(object):
         self._results= []
         # bool for keeping track of convergence
         self._notConverged = True
-                
+        # DFT package name
+        self._dftPackage = dftCode
         # open input file to check if it exists
         try:
             fileptr = open(self._inputFile,'r')
@@ -114,8 +116,8 @@ class Converger(object):
             task.job_run()
             
             # parse output file after job finishes and update results
-            readOut = OutputParser()
-            readOut.parse_qe_op_file(outFile)
+            readOut = OutputParser(self._dftPackage)
+            readOut.parse_op_file(outFile)
             
             # TO DO: make it generic
             self._results.append([readOut.get_kpoints(), \
@@ -163,7 +165,7 @@ class Converger(object):
         
         return modLines
     
-    def plot_results(self):
+    def plot_results(self,xlabel,ylabel):
         """
         Plot results of convergence tests
         """

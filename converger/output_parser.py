@@ -19,16 +19,39 @@ class OutputParser(object):
        opp.get_kpoints()
     """
     
-    def __init__(self):
+    def __init__(self, dftCode='qe'):
+        """
+        Initializes an object to read DFT output files
+        
+        dftCode: string, program name eg. 'qe', 'vasp'
+        
+        Has 5 attributes:
+            self._dftName: string, determined by dftCode
+            self._totEnergy: float, stores total energy of the system
+            self._kpoints: float, stores k-points used by the system
+            self._qeDict: dictionary, translate generic keyword to QE keyword
+            self.rydtoev: float, convert energies from Ry to eV 
+        """
+        self._dftName = dftCode
         self._totEnergy = 0.0
-        self._kpoints = 0
-        # Dictionary to translate generic keyword to code specific keyword
-        # the list can be expanded if a metric other than the total energy 
-        # is the convergence criterion
-        # Dictionary to parse QE output files
+        self._kpoints = 0 
+        # to parse QE output files
         self._qeDict = {'total energy':'!', 'kpoints': 'number of k points'}
         # TO DO: Include option to choose units
         self.rydtoev = 13.605698065894
+        
+    def parse_op_file(self,filename):
+        """
+        Function that passes control to DFT code-based parser
+        
+        filename: string, path to output file
+        """
+        if self._dftName == 'qe':
+            self.parse_qe_op_file(filename)
+        elif self._dftName == 'vasp':
+            print('VASP support not yet implemented')
+        else:
+            print('DFT program name is not recognized. Check input!')
         
     def parse_qe_op_file(self,filename):
         # open output file in read-only mode
@@ -48,8 +71,6 @@ class OutputParser(object):
         except OSError:
             print('Cannot open: ', filename)
             sys.exit(1)
-        else:
-            fileptr.close()
                       
     def get_totenergy(self):
         return self._totEnergy
