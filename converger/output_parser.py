@@ -5,6 +5,7 @@ Parse QE output files and return the results
 
 @author: abishekk
 """
+import sys
 
 class OutputParser(object):
     
@@ -31,21 +32,25 @@ class OutputParser(object):
         
     def parse_qe_op_file(self,filename):
         # open output file in read-only mode
-        fileptr = open(filename,'r')
-                
-        # search file for keywords and extract values
-        for line in fileptr:
-            
-            # total energy in eV
-            if self._qeDict['total energy'] in line:
-                self._totEnergy = float(line.split()[4])*self.rydtoev
-                
-            # total number of k-points
-            if self._qeDict['kpoints'] in line:
-                self._kpoints = int(line.split()[4])
-        # close file   
-        fileptr.close() 
-                
+        try:
+            fileptr = open(filename,'r')
+            # search file for keywords and extract values
+            for line in fileptr:                
+                # total energy in eV
+                if self._qeDict['total energy'] in line:
+                    self._totEnergy = float(line.split()[4])*self.rydtoev
+                    
+                # total number of k-points
+                if self._qeDict['kpoints'] in line:
+                    self._kpoints = int(line.split()[4])
+            # close file   
+            fileptr.close() 
+        except OSError:
+            print('Cannot open: ', filename)
+            sys.exit(1)
+        else:
+            fileptr.close()
+                      
     def get_totenergy(self):
         return self._totEnergy
     
