@@ -15,13 +15,13 @@ class TestOutputParserMethods(unittest.TestCase):
     
     def test_parse_qe_op_file(self):
         # case 1
-        testOutRead = OutputParser()
+        testOutRead = OutputParser('qe')
         testOutRead.parse_qe_op_file('./out.dummy_qe')
         self.assertEqual(testOutRead.get_kpoints(),42)
         self.assertEqual(testOutRead.get_totenergy(),-1.0*testOutRead.rydtoev)
         
         # case 2
-        testOutRead = OutputParser()
+        testOutRead = OutputParser('qe')
         testOutRead.parse_qe_op_file('./si.scf.cg.out')
         self.assertEqual(testOutRead.get_kpoints(),10)
         self.assertEqual(testOutRead.get_totenergy(), \

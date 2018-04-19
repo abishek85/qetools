@@ -13,7 +13,7 @@ class OutputParser(object):
     Read output files from finished DFT calculations
     
     Usage eg. 
-       opp = OutputParser()
+       opp = OutputParser('qe')
        opp.parse_op_file('si.scf.cg.out')
        opp.get_totenergy()
        opp.get_kpoints()
@@ -26,13 +26,13 @@ class OutputParser(object):
         dftCode: string, program name eg. 'qe', 'vasp'
         
         Has 5 attributes:
-            self._dftName: string, determined by dftCode
+            self.dftName: string, determined by dftCode
             self._totEnergy: float, stores total energy of the system
-            self._kpoints: float, stores k-points used by the system
+            self._kpoints: int, stores k-points used by the system
             self._qeDict: dictionary, translate generic keyword to QE keyword
             self.rydtoev: float, convert energies from Ry to eV 
         """
-        self._dftName = dftCode
+        self.dftName = dftCode
         self._totEnergy = 0.0
         self._kpoints = 0 
         # to parse QE output files
@@ -46,14 +46,17 @@ class OutputParser(object):
         
         filename: string, path to output file
         """
-        if self._dftName == 'qe':
+        if self.dftName == 'qe':
             self.parse_qe_op_file(filename)
-        elif self._dftName == 'vasp':
+        elif self.dftName == 'vasp':
             print('VASP support not yet implemented')
         else:
             print('DFT program name is not recognized. Check input!')
         
     def parse_qe_op_file(self,filename):
+        """
+        Parse QE output files and store the results
+        """
         # open output file in read-only mode
         try:
             fileptr = open(filename,'r')
@@ -73,7 +76,14 @@ class OutputParser(object):
             sys.exit(1)
                       
     def get_totenergy(self):
+        """
+        Returns total energy value read from output in eV (float)
+        """
         return self._totEnergy
     
     def get_kpoints(self):
+        """
+        Returns the total number of k-points used for DFT calculation (int)
+        """
         return self._kpoints
+    
