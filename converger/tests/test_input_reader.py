@@ -26,7 +26,7 @@ class TestInputReaderMethods(unittest.TestCase):
         self.assertEqual(linesRead[0], 'Hello World!\n')
         
         # case 2
-        inReader = InputReader('in.pw.si')
+        inReader = InputReader('in.pw.si','qe')
         inReader.read_file()
         linesRead = inReader.get_lines_file()
         
@@ -38,7 +38,7 @@ class TestInputReaderMethods(unittest.TestCase):
         Unit test for find_line_number
         """
         # case 1
-        inReader = InputReader('in.pw.si')
+        inReader = InputReader('in.pw.si','qe')
         inReader.read_file()        
         linesRead = inReader.get_lines_file()
         
