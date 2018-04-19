@@ -12,7 +12,13 @@ import subprocess
 import time
 
 class JobLauncher(object):
+    """
+    Class to launch and monitor jobs on a cluster
     
+    Usage:
+        jobMgr= JobLauncher('mpirun -np 16  pw.x','in.pw.si','out.pw.si')
+        jobMgr.job_run()
+    """
     def __init__(self, cmd, inputFile, outputFile, pbsParams=None):
         """
         Initializes an object to launch and monitor jobs
