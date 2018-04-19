@@ -5,6 +5,7 @@ Created on Tue Apr 17 11:51:44 2018
 
 @author: abishekk
 """
+
 import os
 import sys
 import subprocess
@@ -24,43 +25,45 @@ class JobLauncher(object):
         pbsParams: string, PBS options for running the job
         
         Has 6 attributes:
-            self._cmdStr: string, determined by cmd
-            self._inFile: string, determined by inputFile
-            self._outFile: string, determined by outputFile
-            self._pbsParams: string, determined by pbsParams
+            self.cmdStr: string, determined by cmd
+            self.inFile: string, determined by inputFile
+            self.outFile: string, determined by outputFile
+            self.pbsParams: string, determined by pbsParams
             self._jobId: integer, job id returned by the queue manager
             self._workDir: string, path of the current working directory
         """
         
-        self._cmdStr = cmd
-        self._inFile = inputFile
-        self._outFile = outputFile
-        self._pbsParams = pbsParams
+        self.cmdStr = cmd
+        self.inFile = inputFile
+        self.outFile = outputFile
+        self.pbsParams = pbsParams
         self._jobId = None
         self._workDir = os.getcwd()
                 
         try:
-            fileptr = open(self._inFile,'r')
+            fileptr = open(self.inFile,'r')
         except OSError:
-            print('Cannot open: ', self._inFile)
+            print('Cannot open: ', self.inFile)
             sys.exit(1)
         else:
             fileptr.close()
             
-        if self._pbsParams == None:
-            self._pbsParams = ''
+        if self.pbsParams == None:
+            self.pbsParams = ''
 
     def job_run(self):
         """
         Submit job to the queue using PBS and wait for the job to finish
         """
         # process commands for running the job
-        self._cmdStr = self._cmdStr + ' < ' + self._inFile + \
-                       ' > ' + self._outFile
-        
+        self.cmdStr = self.cmdStr + ' < ' + self.inFile + \
+                       ' > ' + self.outFile
+                       
         # submit job to the queue
-        submitCmd = "echo '" + self._cmdStr + "' | " + "qsub -V -d " + \
-                     self._workDir + " " + self._pbsParams + " -"
+        # TO DO: Launch from PBS script
+        submitCmd = "echo '" + self.cmdStr + "' | " + "qsub -V -d " + \
+                     self._workDir + " " + self.pbsParams + " -"
+        
         # TO DO: Error checking to make sure job launches and runs            
         jobSubmit = subprocess.Popen(submitCmd, shell=True, \
                                      stdout=subprocess.PIPE)
